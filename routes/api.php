@@ -23,6 +23,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/getGajiById', [GeneralController::class, 'getGajiById'])->name('getGajiById');
     Route::get('/Absensi', [GeneralController::class, 'Absensi'])->name('Absensi');
     Route::get('/Gaji', [GeneralController::class, 'Gaji'])->name('Gaji');
+    Route::get('/listPegawai', [GeneralController::class, 'listPegawai'])->name('listPegawai');
+    Route::get('/listAbsensiById/{id}', [GeneralController::class, 'listAbsensiById'])->name('listAbsensiById');
+    Route::get('/ListGajiById/{id}', [GeneralController::class, 'ListGajiById'])->name('ListGajiById');
+    Route::post('/GantiPassword', [GeneralController::class, 'GantiPassword'])->name('GantiPassword');
     // Route::post('/getDetailWisata', [GeneralController::class, 'getDetailWisata'])->name('getDetailWisata');
     // Route::post('/listCommentById', [GeneralController::class, 'listCommentById'])->name('listCommentById');
     // Route::post('/addCommentById', [GeneralController::class, 'addCommentById'])->name('addCommentById');

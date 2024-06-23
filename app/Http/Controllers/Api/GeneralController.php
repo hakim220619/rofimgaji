@@ -7,6 +7,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class GeneralController extends Controller
 {
@@ -139,10 +140,10 @@ class GeneralController extends Controller
     {
         // header('Access-Control-Allow-Origin: *');
         // dd($request->all());
-        $data['gaji'] = DB::table('gaji')->where('id', 3)->first();
+        $data['gaji'] = DB::table('gaji')->where('role_id', Auth::user()->role)->first();
         $data['users'] = DB::table('users')->where('id', Auth::user()->id)->first();
         $absen = DB::table('absensi')->where('id_user', Auth::user()->id)->where('tanggal', 'like', '%' . date('Y-m') . '%')->where('status', 'OUT')->count();
-        $gaji = DB::table('gaji')->where('id', 3)->first();
+        $gaji = DB::table('gaji')->where('role_id', Auth::user()->role)->first();
 
         // $data['absen'] = $absen;
         $data['gajiperjam'] = $gaji->nominal;
@@ -173,6 +174,132 @@ class GeneralController extends Controller
                 // dd($totalAbsen);
                 $values[] = array(
                     'nama' => Auth::user()->name,
+                    'bulan' => $month[$key],
+                    'gaji' => $gaji->nominal,
+                    'totalAbsen' => $totalAbsen,
+                    'totalGaji' => $totalAbsen * $gaji->nominal,
+                    'tahun' => date('Y')
+                );
+            }
+        }
+        // file_put_contents('mydata.json', json_encode($values, JSON_FORCE_OBJECT));
+        // dd($values);
+        // dd($no);
+        $data['month'] = $month;
+        $data['no'] = $no;
+        return response()->json([
+            'success' => true,
+            'message' => 'Show Data Success',
+            'data' => $values,
+        ]);
+    }
+    function GantiPassword(Request $request) {
+        DB::table('users')->where('id', Auth::user()->id)->update([
+            'password' => Hash::make($request->password)
+        ]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Reset Password Success',
+        ]);
+    }
+    function listPegawai() {
+       $data = DB::table('users')->where('role', 2)->get();
+        return response()->json([
+            'success' => true,
+            'message' => 'Reset Password Success',
+            'data' => $data
+        ]);
+    }
+    function listAbsensiById($id) {
+        $data['gaji'] = DB::table('gaji')->where('role_id', 2)->first();
+        $data['users'] = DB::table('users')->where('id', $id)->first();
+        $absen = DB::table('absensi')->where('id_user', $id)->where('tanggal', 'like', '%' . date('Y-m') . '%')->where('status', 'OUT')->count();
+        $gaji = DB::table('gaji')->where('role_id', 2)->first();
+
+        // $data['absen'] = $absen;
+        $data['gajiperjam'] = $gaji->nominal;
+        $data['hasilGaji'] = $absen * $gaji->nominal;
+
+        $month = [];
+        $no = [];
+        for ($m = 1; $m <= 12; $m++) {
+
+            $month[] = date('F', mktime(0, 0, 0, $m, 1, date('Y')));
+            $no[] = $m;
+            // dd($no);
+
+
+        }
+        $totalAbsen =  DB::table('absensi')->where('id_user', $id)->where('tanggal', 'like', '%2024-10%')->where('status', 'OUT')->count();
+        // dd($month);
+        foreach ($no as $key => $n) {
+            // dd($month[$key]);
+            if ($n > 9) {
+                $totalAbsen =  DB::table('absensi')->where('id_user', $id)->where('tanggal', 'like', '%' . date('Y-') . '' . $n . '%')->where('status', 'OUT')->count();
+                $values[] = array(
+                    'nama' => Auth::user()->name,
+                    'bulan' => $month[$key],
+                    'totalAbsen' => $totalAbsen,
+                    'tahun' => date('Y')
+                );
+            } else {
+                $totalAbsen = DB::table('absensi')->where('id_user', $id)->where('tanggal', 'like', '%' . date('Y-') . '0' . $n . '%')->where('status', 'OUT')->count();
+                // dd($totalAbsen);
+                $values[] = array(
+                    'nama' => Auth::user()->name,
+                    'bulan' => $month[$key],
+                    'totalAbsen' => $totalAbsen,
+                    'tahun' => date('Y')
+
+                );
+            }
+        }
+        // file_put_contents('mydata.json', json_encode($values, JSON_FORCE_OBJECT));
+        // dd($values);
+        // dd($no);
+        $data['month'] = $month;
+        $data['no'] = $no;
+        return response()->json([
+            'success' => true,
+            'message' => 'Show Data Success',
+            'data' => $values,
+        ]);
+    }
+    function ListGajiById($id) {
+        $data['gaji'] = DB::table('gaji')->where('role_id', 2)->first();
+        $data['users'] = DB::table('users')->where('id', $id)->first();
+        $absen = DB::table('absensi')->where('id_user', $id)->where('tanggal', 'like', '%' . date('Y-m') . '%')->where('status', 'OUT')->count();
+        $gaji = DB::table('gaji')->where('role_id', 2)->first();
+
+        // $data['absen'] = $absen;
+        $data['gajiperjam'] = $gaji->nominal;
+        $data['hasilGaji'] = $absen * $gaji->nominal;
+
+        $month = [];
+        $no = [];
+        for ($m = 1; $m <= 12; $m++) {
+
+            $month[] = date('F', mktime(0, 0, 0, $m, 1, date('Y')));
+            $no[] = $m;
+        }
+        $totalAbsen =  DB::table('absensi')->where('id_user', $id)->where('tanggal', 'like', '%2024-10%')->where('status', 'OUT')->count();
+        foreach ($no as $key => $n) {
+            if ($n > 9) {
+                $totalAbsen =  DB::table('absensi')->where('id_user', $id)->where('tanggal', 'like', '%' . date('Y-') . '' . $n . '%')->where('status', 'OUT')->count();
+                $values[] = array(
+                    'nama' => $data['users']->name,
+                    'bulan' => $month[$key],
+                    'gaji' => $gaji->nominal,
+                    'totalAbsen' => $totalAbsen,
+                    'totalGaji' => $totalAbsen * $gaji->nominal,
+                    'tahun' => date('Y')
+                );
+            } else {
+
+                $totalAbsen = DB::table('absensi')->where('id_user', $id)->where('tanggal', 'like', '%' . date('Y-') . '0' . $n . '%')->where('status', 'OUT')->count();
+                // dd($totalAbsen);
+                $values[] = array(
+                    'nama' => $data['users']->name,
                     'bulan' => $month[$key],
                     'gaji' => $gaji->nominal,
                     'totalAbsen' => $totalAbsen,
